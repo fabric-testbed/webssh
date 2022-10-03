@@ -30,9 +30,10 @@ def recycle_worker(worker):
 
 
 class Worker(object):
-    def __init__(self, loop, ssh, chan, dst_addr):
+    def __init__(self, loop, ssh, chan, dst_addr, bssh=None):
         self.loop = loop
         self.ssh = ssh
+        self.bssh = bssh
         self.chan = chan
         self.dst_addr = dst_addr
         self.fd = chan.fileno()
@@ -119,6 +120,9 @@ class Worker(object):
             self.handler.close(reason=reason)
         self.chan.close()
         self.ssh.close()
+        if self.bssh:
+            logging.info('Closing matching bastion connection')
+            self.bssh.close()
         logging.info('Connection to {}:{} lost'.format(*self.dst_addr))
 
         clear_worker(self, clients)

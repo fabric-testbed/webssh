@@ -63,11 +63,12 @@
         </div>
         <div class="row">
           <div class="col">
-            <label for="Username">Private Key</label>
-            <input class="form-control" type="file" id="privatekey" name="privatekey" value="">
+            <label for="PrivateKey">Private Key</label>
+            <textarea class="form-control" id="privatekey" name="privatekey">
+            </textarea>
           </div>
           <div class="col">
-            <label for="Passphrase">Passphrase</label>
+            <label for="Passphrase">Key Passphrase</label>
             <input class="form-control" type="password" id="passphrase" name="passphrase" value="">
           </div>
         </div>
@@ -77,6 +78,34 @@
             <input class="form-control" type="password" id="totp" name="totp" value="">
           </div>
           <div class="col">
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label for="bhostname">Bastion hostname</label>
+            <input class="form-control" type="text" id="bhostname" name="bhostname" value="">
+          </div>
+          <div class="col">
+            <label for="bport">Bastion Port</label>
+            <input class="form-control" type="number" id="bport" name="bport" placeholder="22" value="" min=1 max=65535>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label for="busername">Bastion username</label>
+            <input class="form-control" type="text" id="busername" name="busername" value="">
+          </div>
+          <div class="col"></div>
+        </div>
+        <div class="row">
+          <div class="col">
+            <label for="bprivatekey">Bastion Private Key</label>
+            <textarea class="form-control" id="bprivatekey" name="bprivatekey">
+            </textarea>
+          </div>
+          <div class="col">
+            <label for="bpassphrase">Bastion Key Passphrase</label>
+            <input class="form-control" type="password" id="bpassphrase" name="bpassphrase" value="">
           </div>
         </div>
         <input type="hidden" id="term" name="term" value="xterm-256color">
@@ -92,6 +121,7 @@
     </div>
 
     <script src="static/js/jquery.min.js"></script>
+    <script src="static/js/js.cookie.min.js"></script>
     <script src="static/js/popper.min.js"></script>
     <script src="static/js/bootstrap.min.js"></script>
     <script src="static/js/xterm.min.js"></script>

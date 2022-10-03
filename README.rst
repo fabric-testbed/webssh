@@ -24,6 +24,16 @@ Features
 -  Modern browsers including Chrome, Firefox, Safari, Edge, Opera
    supported.
 
+This version differs from the original in that
+
+-  It supports bastion hosts
+-  It takes separate login and private keys options for bastion and target hosts
+-  It resets the form for security reasons (not to retain private keys)
+-  The paramiko code is modified to support logging in over a bastion host
+-  Form can be filled in via two cookies provided by caller
+(credentials and bastion_credentials) and if cookies are set the form auto submits; this allows
+external invocation (care must be taken to limit CSRF appropriately)
+
 Preview
 ~~~~~~~
 

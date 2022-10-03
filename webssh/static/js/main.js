@@ -92,7 +92,7 @@ jQuery(function($){
 
   function populate_form(data) {
     var names = form_keys.concat(['passphrase']),
-        i, name;
+       i, name;
 
     for (i=0; i < names.length; i++) {
       name = names[i];
@@ -558,6 +558,9 @@ jQuery(function($){
       title_element.text = default_title;
     };
 
+    // reset the form
+    $(form_id)[0].reset()
+
     $(window).resize(function(){
       if (term) {
         resize_terminal(term);
@@ -670,18 +673,22 @@ jQuery(function($){
   function connect_without_options() {
     // use data from the form
     var form = document.querySelector(form_id),
-        inputs = form.querySelectorAll('input[type="file"]'),
+        //inputs = form.querySelectorAll('input[type="file"]'),
         url = form.action,
         data, pk;
 
-    disable_file_inputs(inputs);
+    //disable_file_inputs(inputs);
     data = new FormData(form);
-    pk = data.get('privatekey');
-    enable_file_inputs(inputs);
+    //pk = data.get('privatekey');
+    //enable_file_inputs(inputs);
 
     function ajax_post() {
       status.text('');
       button.prop('disabled', true);
+      //console.log('POST DATA')
+      //for(const e of data.entries()) {
+      //  console.log(e)
+      //}
 
       $.ajax({
           url: url,
@@ -700,17 +707,22 @@ jQuery(function($){
       return;
     }
 
-    if (pk && pk.size && !debug) {
-      read_file_as_text(pk, function(text) {
-        if (text === undefined) {
-            log_status('Invalid private key: ' + pk.name);
-        } else {
-          ajax_post();
-        }
-      });
-    } else {
-      ajax_post();
-    }
+    // load private key file
+    //if (pk && pk.size && !debug) {
+    //  read_file_as_text(pk, function(text) {
+    //    console.log('READING PRIVATE KEY')
+    //    if (text === undefined) {
+    //        log_status('Invalid private key: ' + pk.name);
+    //    } else {
+    //      ajax_post();
+    //    }
+    //  });
+    //} else {
+    //  ajax_post();
+    //}
+
+    // instead added
+    ajax_post();
 
     return result;
   }
@@ -783,7 +795,7 @@ jQuery(function($){
       if (hostname) {
         validated_form_data = result.data;
       }
-      store_items(fields, result.data);
+      //store_items(fields, result.data);
     }
   }
 
@@ -854,5 +866,43 @@ jQuery(function($){
       form_container.show();
     }
   }
+
+  $(function() {
+    // if credential cookies were provided, fill their contents into form fields and 'submit'
+    x = false
+
+    credentials = Cookies.get('credentials');
+    bastion_credentials = Cookies.get('bastion-credentials');
+
+    cookies = ['credentials', 'bastion-credentials']
+    for (const c of cookies) {
+      Cookies.remove(c);
+    }
+
+    if (credentials) {
+      credential_dict = JSON.parse(atob(credentials));
+      x = true
+      $(form_id).find('input[name="hostname"]').val(credential_dict['hostname']);
+      $(form_id).find('input[name="port]"]').val(credential_dict['port']);
+      $(form_id).find('input[name="username"]').val(credential_dict['username']);
+      $(form_id).find('input[name="password"]').val(credential_dict['password']);
+      $(form_id).find('textarea[name="privatekey"]').val(credential_dict['privatekey']);
+      $(form_id).find('input[name="passphrase"]').val(credential_dict['passphrase']);
+    }
+    if (bastion_credentials) {
+      credential_dict = JSON.parse(atob(bastion_credentials))
+      $(form_id).find('input[name="bhostname"]').val(credential_dict['hostname']);
+      $(form_id).find('input[name="bport]"]').val(credential_dict['port']);
+      $(form_id).find('input[name="busername"]').val(credential_dict['username']);
+      $(form_id).find('input[name="password"]').val(credential_dict['password']);
+      $(form_id).find('textarea[name="bprivatekey"]').val(credential_dict['privatekey']);
+      $(form_id).find('input[name="bpassphrase"]').val(credential_dict['passphrase']);
+    }
+    if (x) {
+      connect();
+    } else {
+      $(form_id)[0].reset()
+    }
+  });
 
 });

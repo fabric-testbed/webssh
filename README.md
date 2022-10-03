@@ -21,6 +21,16 @@ A simple web application to be used as an ssh client to connect to your ssh serv
 * Auto detect the ssh server's default encoding.
 * Modern browsers including Chrome, Firefox, Safari, Edge, Opera supported.
 
+This version differs from the [original](https://github.com/huashengdun/webssh) in that
+* It supports bastion hosts
+* It takes separate login and private keys options for bastion and target hosts
+* It resets the form after submission for security reasons (not to retain private keys)
+* The paramiko code is modified to support logging in over a bastion host if bastion
+host info is provided
+* Form can be filled in remotely via two cookies provided by caller 
+(`credentials` and `bastion_credentials`) and if cookies are set the form auto submits; this allows
+external invocation (care must be taken to limit CSRF appropriately); cookies are
+removed once used.
 
 ### Preview
 

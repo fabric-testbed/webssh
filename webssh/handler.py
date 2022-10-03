@@ -346,8 +346,7 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
         ssh.set_missing_host_key_policy(self.policy)
         return ssh
 
-    def get_privatekey(self):
-        name = 'privatekey'
+    def get_privatekey(self, name='privatekey'):
         lst = self.request.files.get(name)
         if lst:
             # multipart form
@@ -367,8 +366,8 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
             raise InvalidValueError('Invalid hostname: {}'.format(value))
         return value
 
-    def get_port(self):
-        value = self.get_argument('port', u'')
+    def get_port(self, name='port'):
+        value = self.get_argument(name, u'')
         if not value:
             return DEFAULT_PORT
 
@@ -395,17 +394,40 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
         privatekey, filename = self.get_privatekey()
         passphrase = self.get_argument('passphrase', u'')
         totp = self.get_argument('totp', u'')
+        try:
+            bhostname = self.get_value('bhostname')
+        except InvalidValueError:
+            bhostname = None
+        bport = self.get_port('bport')
+
+        try:
+            busername = self.get_value('busername')
+        except InvalidValueError:
+            busername = None
+
+        bprivatekey, bfilename = self.get_privatekey('bprivatekey')
+        bpassphrase = self.get_argument('bpassphrase', 'u')
 
         if isinstance(self.policy, paramiko.RejectPolicy):
             self.lookup_hostname(hostname, port)
+
+        #print(f'{privatekey=}')
+        #print(f'{bprivatekey=}')
 
         if privatekey:
             pkey = PrivateKey(privatekey, passphrase, filename).get_pkey_obj()
         else:
             pkey = None
 
+        if bprivatekey:
+            bpkey = PrivateKey(bprivatekey, bpassphrase, bfilename).get_pkey_obj()
+        else:
+            bpkey = None
+
         self.ssh_client.totp = totp
-        args = (hostname, port, username, password, pkey)
+        # split the arguments into primary and bastion
+        # note we do not allow passwords for bastions
+        args = ((hostname, port, username, password, pkey), (bhostname, bport, busername, '', bpkey))
         logging.debug(args)
 
         return args
@@ -451,8 +473,33 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
         dst_addr = args[:2]
         logging.info('Connecting to {}:{}'.format(*dst_addr))
 
+        primary_args, bastion_args = args
+
+        # if bastion bits are specified, open a bastion connection first
+        bastion_channel = None
+        bastion = None
         try:
-            ssh.connect(*args, timeout=options.timeout)
+            if bastion_args[0]:
+                logging.info(f'Opening connection to bastion host {bastion_args[0]}:{bastion_args[1]}')
+                bastion = paramiko.SSHClient()
+                bastion.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                bastion.connect(*bastion_args)
+                bastion_transport = bastion.get_transport()
+                bastion_channel = bastion_transport.open_channel("direct-tcpip",
+                                                                 (primary_args[0], primary_args[1]),
+                                                                 ('0.0.0.0', 22))
+        except socket.error:
+            raise ValueError('Unable to connect to bastion {}:{}'.format(*dst_addr))
+        except paramiko.BadAuthenticationType:
+            raise ValueError('Bad bastion authentication type.')
+        except paramiko.AuthenticationException:
+            raise ValueError('Bastion authentication failed.')
+        except paramiko.BadHostKeyException:
+            raise ValueError('Bad bastion host key.')
+
+        try:
+            print(f'{bastion_channel=}')
+            ssh.connect(*primary_args, timeout=options.timeout, sock=bastion_channel)
         except socket.error:
             raise ValueError('Unable to connect to {}:{}'.format(*dst_addr))
         except paramiko.BadAuthenticationType:
@@ -465,7 +512,7 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
         term = self.get_argument('term', u'') or u'xterm'
         chan = ssh.invoke_shell(term=term)
         chan.setblocking(0)
-        worker = Worker(self.loop, ssh, chan, dst_addr)
+        worker = Worker(self.loop, ssh, chan, dst_addr, bastion)
         worker.encoding = options.encoding if options.encoding else \
             self.get_default_encoding(ssh)
         return worker
