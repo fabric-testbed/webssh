@@ -125,7 +125,9 @@ http://localhost:8888/?term=xterm-256color
 
 ### Using cookies to set form fields
 
-Two cookies: `credentials` and `bastion-credentials` (the latter is optional), structured identically, can be used to preset the form fields, thus allowing this app to be 'invoked' from another app in the same domain and provide an easy login option. Here is example JavaScript code that shows how the cookies can be structured and set. Note the code tries to remove cookies as quickly as is practical, so they don't remain in browser storage. 
+Two cookies: `credentials` and `bastion-credentials` (the latter is optional), structured identically, can be used to preset the form fields, thus allowing this app to be 'invoked' from another app in the same domain and provide an easy login option. Here is example JavaScript code that shows how the cookies can be structured and set. 
+
+Obviously passing credentials inside cookies creates some dangers. You must weigh convenience vs. security before deploying this way. The assumption is that all communications are protected by SSL and all servers in some-domain.com to which your browser may be talking to are trusted, since cookies will be sent to any host within some-domain.com while they haven't expired. Note the code tries to remove cookies as quickly as is practical, so they don't remain in browser storage to reduce opportunities for leakage. Timeouts can be tuned.
 ```
      <script>
          credentials = { 'hostname': 'secret-host.domain.com', 'username':'user-bob',
@@ -137,6 +139,7 @@ Two cookies: `credentials` and `bastion-credentials` (the latter is optional), s
          cred_string = btoa(JSON.stringify(credentials));
          bast_string = btoa(JSON.stringify(bastion_credentials));
          now = new Date();
+	 // expire in 15 seconds - this is on the generous side
          now.setSeconds(now.getSeconds() + 15);
          nowString = now.toUTCString();
          // we want to make sure cookies don't leak - set Strict and expiry date in 15 seconds
