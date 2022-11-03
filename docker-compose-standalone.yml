@@ -1,0 +1,11 @@
+version: '3.6'
+services:
+  server:
+    build: .
+    ports:
+      - "8888:8888"
+      - "8889:8889"
+    volumes:
+      - /root/cert:/etc/ssl:ro
+    restart: on-failure
+

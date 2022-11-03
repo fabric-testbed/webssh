@@ -31,6 +31,7 @@ host info is provided
 (`credentials` and `bastion_credentials`) and if cookies are set the form auto submits; this allows
 external invocation (care must be taken to limit CSRF appropriately); cookies are
 removed once used.
+* Note that this only works with cookies being set in the same domain. Cookie setter should set a very limited expiry (a few seconds) and unset them if possible.
 
 ### Preview
 
@@ -190,30 +191,45 @@ python -m pytest tests
 
 ### Deployment
 
-Running behind an Nginx server
-
+Running as a standalone app (in a venv, for example) with self-signed certs:
 ```bash
-wssh --address='127.0.0.1' --port=8888 --policy=reject
-```
-```nginx
-# Nginx config example
-location / {
-    proxy_pass http://127.0.0.1:8888;
-    proxy_http_version 1.1;
-    proxy_read_timeout 300;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-    proxy_set_header Host $http_host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Real-PORT $remote_port;
-}
+wssh --port=8888 --sslport=8889 --certfile='ssl/cert.pem' --keyfile='ssl/key.pem' --xheaders=False --policy=reject
 ```
 
-Running as a standalone server
+Running without certs:
 ```bash
-wssh --port=8080 --sslport=4433 --certfile='cert.crt' --keyfile='cert.key' --xheaders=False --policy=reject
+wssh --port=8888 --xheaders=False --policy=reject
 ```
 
+Running in a Docker with self-signed certs (relies on cert and key files in ssl/; edit docker-entrypoint.sh):
+```bash
+$ docker compose -f docker-compose-self-signed.yml build
+$ docker compose -f docker-compose-self-signed.yml up
+```
+Service will run on ports 8888(http) and 8889(https).
+
+Running in a Docker with production certs (be sure to edit docker-compose-standalone.yml volumes section and docker-entrypoint.sh):
+```bash
+$ docker compose -f docker-compose-standalone.yml build
+$ docker compose -f docker-compose-standalone.yml up
+```
+Service will run on ports 8888(http) and 8889(https).
+
+Running behind an Nginx server with or without scaling (be sure to edit docker-compose-nginx.yml volumes section and docker-entrypoint.sh):
+```bash
+$ docker compose -f docker-compose-standalone.yml build
+$ docker compose -f docker-compose-standalone.yml up
+```
+or if you want to scale up:
+```bash
+$ docker compose -f docker-compose-standalone.yml build
+$ docker compose -f docker-compose-standalone.yml up --scale webssh=3
+```
+Service will run on ports 80(http) and 443(https).
+
+Nginx configuration automatically redirects from port 80 to port 443 and uses `ip_hash` session stickiness which should support most reasonable cases.
+
+More information on Nginx and docker-compose configuration can be found (here)[https://pspdfkit.com/blog/2018/how-to-use-docker-compose-to-run-multiple-instances-of-a-service-in-development/]
 
 ### Tips
 

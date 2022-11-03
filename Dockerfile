@@ -1,12 +1,14 @@
-FROM python:3-alpine
+FROM python:3.10-alpine
 
-LABEL maintainer='<author>'
-LABEL version='0.0.0-dev.0-build.0'
+LABEL maintainer='ibaldin@renci.org'
+LABEL version='1.6.0b'
 
-ADD . /code
+COPY . /code
 WORKDIR /code
+
 RUN \
-  apk add --no-cache libc-dev libffi-dev gcc && \
+  python3 -m pip install virtualenv && \
+  apk add --no-cache libc-dev libffi-dev gcc bash && \
   pip install -r requirements.txt --no-cache-dir && \
   apk del gcc libc-dev libffi-dev && \
   addgroup webssh && \
@@ -14,5 +16,8 @@ RUN \
   chown -R webssh:webssh /code
 
 EXPOSE 8888/tcp
+EXPOSE 8889/tcp
 USER webssh
-CMD ["python", "run.py"]
+
+ENTRYPOINT ["/code/docker-entrypoint.sh"]
+CMD ["run_server"]

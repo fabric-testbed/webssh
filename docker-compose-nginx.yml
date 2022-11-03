@@ -1,0 +1,19 @@
+version: '3.6'
+services:
+  webssh:
+    build: .
+    expose:
+      - "8888"
+    restart: on-failure
+
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/nginx.conf:ro
+      - /root/cert:/etc/ssl:ro
+    depends_on:
+      - webssh
+    ports:
+      - "443:443"
+      - "80:80"
+
