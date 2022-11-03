@@ -123,6 +123,38 @@ Passing a terminal type
 http://localhost:8888/?term=xterm-256color
 ```
 
+### Using cookies to set form fields
+
+Two cookies: `credentials` and `bastion-credentials`, structured identically, can be used to preset the form fields, thus allowing this app to be 'invoked' from another app in the same domain and provide an easy login option. Here is example JavaScript code that shows how the cookies can be structured and set. Note the code tries to remove cookies as quickly as is practical, so they don't remain in browser storage. 
+```
+     <script>
+         credentials = { 'hostname': 'secret-host.domain.com', 'username':'user-bob',
+                        'privatekey': `-----BEGIN RSA PRIVATE KEY-----
+-----END RSA PRIVATE KEY-----` };
+         bastion_credentials = { 'hostname': 'bastion-host.secure.com', 'username': 'user-bastion-bob',
+                                'privatekey': `-----BEGIN RSA PRIVATE KEY-----
+-----END RSA PRIVATE KEY-----` };
+         cred_string = btoa(JSON.stringify(credentials));
+         bast_string = btoa(JSON.stringify(bastion_credentials));
+         now = new Date();
+         now.setSeconds(now.getSeconds() + 15);
+         nowString = now.toUTCString();
+         // we want to make sure cookies don't leak - set Strict and expiry date in 15 seconds
+         document.cookie = 'credentials='+cred_string + '; domain=some-domain.com; SameSite=Strict; expires=' + nowString + ';';
+         document.cookie = 'bastion-credentials='+bast_string + '; domain=some-domain.com; SameSite=Strict; expires=' + nowString + ';';
+         setTimeout(function(){
+             window.open("https://web-ssh.some-domain.com/", "_blank");
+         }, 5000);
+         // so they are not visible in the browser storage, delete them too when login is completed;
+	 // this assumes that the host setting cookies is part of some-domain.com where web-ssh is hosted;
+         // if the user is opening multiple sessions quickly this may be a problem since the same cookies are used
+	 // and may inadvertently delete a fresh cookie.
+         setTimeout(function(){
+                 document.cookie = 'credentials=nomore; domain=some-domain.com; SameSite=Strict;';
+                 document.cookie = 'bastion-credentials=nomore; domain=some-domain.com; SameSite=Strict;';
+         }, 10000);
+     </script>
+```
 ### Tests
 
 Requirements
