@@ -10,7 +10,7 @@ if [[ "$1" = 'run_server' ]]; then
 
     # EDIT HERE TO SWITCH FROM STANDALONE TO BEHIND NGINX CONFIGURATION
     # run the standalonw server
-    #python3 run.py --port=8888 --sslport=8889 --certfile=/etc/ssl/beta-5_fabric-testbed_net.pem --keyfile=/etc/ssl/beta-5_fabric-testbed_net.key 
+    #python3 run.py --port=8888 --sslport=8889 --certfile=/etc/ssl/webssh.some-domain.com.pem --keyfile=/etc/ssl/webssh.some-domain.com.key 
     # run under nginx
     python3 run.py --port=8888 
 else
