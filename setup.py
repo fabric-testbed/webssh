@@ -8,14 +8,14 @@ with codecs.open('README.rst', encoding='utf-8') as f:
 
 
 setup(
-    name='webssh',
+    name='webssh-bastion',
     version=version,
-    description='Web based ssh client',
+    description='Web based ssh client with bastion support',
     long_description=long_description,
-    author='Shengdun Hua',
+    author='Shengdun Hua, modified by Ilya Baldin',
     author_email='webmaster0115@gmail.com',
-    url='https://github.com/huashengdun/webssh',
-    packages=['webssh'],
+    url='https://github.com/fabric-testbed/webssh',
+    packages=['webssh-bastion'],
     entry_points='''
     [console_scripts]
     wssh = webssh.main:main
@@ -24,14 +24,6 @@ setup(
     include_package_data=True,
     classifiers=[
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
     ],
     install_requires=[
