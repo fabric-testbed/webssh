@@ -48,38 +48,7 @@ removed once used.
 
 ### Requirements
 
-* Python 2.7/3.4+
-
-
-### Quickstart
-
-1. Install this app, run command `pip install webssh`
-2. Start a webserver, run command `wssh`
-3. Open your browser, navigate to `127.0.0.1:8888`
-4. Input your data, submit the form.
-
-
-### Server options
-
-```bash
-# start a http server with specified listen address and listen port
-wssh --address='2.2.2.2' --port=8000
-
-# start a https server, certfile and keyfile must be passed
-wssh --certfile='/path/to/cert.crt' --keyfile='/path/to/cert.key'
-
-# missing host key policy
-wssh --policy=reject
-
-# logging level
-wssh --logging=debug
-
-# log to file
-wssh --log-file-prefix=main.log
-
-# more options
-wssh --help
-```
+* Python 3.9+
 
 ### Browser console
 
@@ -160,18 +129,6 @@ Passing a terminal type
 http://localhost:8888/?term=xterm-256color
 ```
 
-### Use Docker
-
-Start up the app
-```
-docker-compose up
-```
-
-Tear down the app
-```
-docker-compose down
-```
-
 ### Tests
 
 Requirements
@@ -189,7 +146,7 @@ Use pytest to run all tests
 python -m pytest tests
 ```
 
-### Deployment
+### Deployment Scenarios
 
 Running as a standalone app (in a venv, for example) with self-signed certs:
 ```bash
