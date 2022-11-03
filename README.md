@@ -229,7 +229,7 @@ Service will run on ports 80(http) and 443(https).
 
 Nginx configuration automatically redirects from port 80 to port 443 and uses `ip_hash` session stickiness which should support most reasonable cases.
 
-More information on Nginx and docker-compose configuration can be found (here)[https://pspdfkit.com/blog/2018/how-to-use-docker-compose-to-run-multiple-instances-of-a-service-in-development/]
+More information on Nginx and docker-compose configuration can be found [here](https://pspdfkit.com/blog/2018/how-to-use-docker-compose-to-run-multiple-instances-of-a-service-in-development/)
 
 ### Tips
 
