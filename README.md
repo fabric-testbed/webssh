@@ -150,12 +150,12 @@ python -m pytest tests
 
 Running as a standalone app (in a venv, for example) with self-signed certs:
 ```bash
-wssh --port=8888 --sslport=8889 --certfile='ssl/cert.pem' --keyfile='ssl/key.pem' --xheaders=False --policy=reject
+python run.py --port=8888 --sslport=8889 --certfile='ssl/cert.pem' --keyfile='ssl/key.pem' --xheaders=False --policy=reject
 ```
 
 Running without certs:
 ```bash
-wssh --port=8888 --xheaders=False --policy=reject
+python run.py --port=8888 --xheaders=False --policy=reject
 ```
 
 Running in a Docker with self-signed certs (relies on cert and key files in ssl/; edit docker-entrypoint.sh):
