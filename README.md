@@ -125,7 +125,7 @@ http://localhost:8888/?term=xterm-256color
 
 ### Using cookies to set form fields
 
-Two cookies: `credentials` and `bastion-credentials`, structured identically, can be used to preset the form fields, thus allowing this app to be 'invoked' from another app in the same domain and provide an easy login option. Here is example JavaScript code that shows how the cookies can be structured and set. Note the code tries to remove cookies as quickly as is practical, so they don't remain in browser storage. 
+Two cookies: `credentials` and `bastion-credentials` (the latter is optional), structured identically, can be used to preset the form fields, thus allowing this app to be 'invoked' from another app in the same domain and provide an easy login option. Here is example JavaScript code that shows how the cookies can be structured and set. Note the code tries to remove cookies as quickly as is practical, so they don't remain in browser storage. 
 ```
      <script>
          credentials = { 'hostname': 'secret-host.domain.com', 'username':'user-bob',
@@ -155,6 +155,8 @@ Two cookies: `credentials` and `bastion-credentials`, structured identically, ca
          }, 10000);
      </script>
 ```
+The full list of cookie fields is: `hostname`, `port`, `username`, `password`, `privatekey` and `passphrase`.
+
 ### Tests
 
 Requirements
