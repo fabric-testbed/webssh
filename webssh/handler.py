@@ -471,7 +471,7 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
     def ssh_connect(self, args):
         ssh = self.ssh_client
         dst_addr = args[:2]
-        logging.info('Connecting to {}:{}'.format(*dst_addr))
+        logging.info(f'Connecting to {dst_addr[0][0]} via {dst_addr[1][0]}')
 
         primary_args, bastion_args = args
 
@@ -488,8 +488,8 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
                 bastion_channel = bastion_transport.open_channel("direct-tcpip",
                                                                  (primary_args[0], primary_args[1]),
                                                                  ('0.0.0.0', 22))
-        except socket.error:
-            raise ValueError('Unable to connect to bastion {}:{}'.format(*dst_addr))
+        except socket.error as e:
+            raise ValueError(f'Unable to connect to bastion due to: {e}')
         except paramiko.BadAuthenticationType:
             raise ValueError('Bad bastion authentication type.')
         except paramiko.AuthenticationException:
@@ -498,10 +498,9 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
             raise ValueError('Bad bastion host key.')
 
         try:
-            print(f'{bastion_channel=}')
             ssh.connect(*primary_args, timeout=options.timeout, sock=bastion_channel)
-        except socket.error:
-            raise ValueError('Unable to connect to {}:{}'.format(*dst_addr))
+        except socket.error as e:
+            raise ValueError(f'Unable to connect due to: {e}')
         except paramiko.BadAuthenticationType:
             raise ValueError('Bad authentication type.')
         except paramiko.AuthenticationException:
