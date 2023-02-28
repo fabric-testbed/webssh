@@ -1,4 +1,4 @@
-FROM python:3.10-alpine
+FROM python:3.17-alpine
 
 LABEL maintainer='ibaldin@renci.org'
 LABEL version='1.6.0b'
