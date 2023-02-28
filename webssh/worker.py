@@ -1,6 +1,11 @@
 import logging
+try:
+    import secrets
+except ImportError:
+    secrets = None
 import tornado.websocket
 
+from uuid import uuid4
 from tornado.ioloop import IOLoop
 from tornado.iostream import _ERRNO_CONNRESET
 from tornado.util import errno_from_exception
@@ -37,7 +42,7 @@ class Worker(object):
         self.chan = chan
         self.dst_addr = dst_addr
         self.fd = chan.fileno()
-        self.id = str(id(self))
+        self.id = self.gen_id()
         self.data_to_dst = []
         self.handler = None
         self.mode = IOLoop.READ
@@ -50,6 +55,10 @@ class Worker(object):
             self.on_write()
         if events & IOLoop.ERROR:
             self.close(reason='error event occurred')
+
+    @classmethod
+    def gen_id(cls):
+        return secrets.token_urlsafe(nbytes=32) if secrets else uuid4().hex
 
     def set_handler(self, handler):
         if not self.handler:
