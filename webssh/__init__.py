@@ -2,7 +2,7 @@ import sys
 from webssh._version import __version__, __version_info__
 
 
-__author__ = 'Shengdun Hua <webmaster0115@gmail.com>'
+__author__ = 'Shengdun Hua <webmaster0115@gmail.com> bastion support by Ilya Baldin <ibaldin@renci.org>'
 
 if sys.platform == 'win32' and sys.version_info.major == 3 and \
         sys.version_info.minor >= 8:

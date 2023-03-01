@@ -607,6 +607,20 @@ class WsockHandler(MixinHandler, tornado.websocket.WebSocketHandler):
     def on_message(self, message):
         logging.debug('{!r} from {}:{}'.format(message, *self.src_addr))
         worker = self.worker_ref()
+        if not worker:
+            # The worker has likely been closed. Do not process.
+            logging.debug(
+                "received message to closed worker from {}:{}".format(
+                    *self.src_addr
+                )
+            )
+            self.close(reason='No worker found')
+            return
+
+        if worker.closed:
+            self.close(reason='Worker closed')
+            return
+
         try:
             msg = json.loads(message)
         except JSONDecodeError:

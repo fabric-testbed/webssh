@@ -24,10 +24,13 @@ setup(
     include_package_data=True,
     classifiers=[
         'Programming Language :: Python',
+        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
     ],
     install_requires=[
-        'tornado>=4.5.0',
-        'paramiko>=2.3.1',
+        'tornado>=6.2.0',
+        'paramiko>=3.0.0',
     ],
 )
