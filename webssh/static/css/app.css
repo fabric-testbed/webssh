@@ -1,0 +1,34 @@
+.app-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 5%;
+  margin-top: 0;
+  padding: 0 2rem;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+}
+
+.container {
+  margin-top: 0 !important;
+}
+
+.form-container {
+  height: 100vh !important;
+}
+
+nav {
+  height: 8%;
+}
+
+form {
+  height: 85%;
+}
+
+.btn-primary {
+  background-color: #5798bc !important;
+  border-color: #5798bc !important;
+}
