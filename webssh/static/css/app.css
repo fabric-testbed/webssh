@@ -27,3 +27,8 @@ nav {
 form {
   height: 85%;
 }
+
+.btn-primary {
+  background-color: #5798bc !important;
+  border-color: #5798bc !important;
+}
