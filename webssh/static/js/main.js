@@ -874,9 +874,6 @@ jQuery(function($){
     credentials = Cookies.get('credentials');
     bastion_credentials = Cookies.get('bastion-credentials');
 
-    console.log(`credentials retrieved from cookies: ${credentials}`)
-    console.log(`bastion credentials retrieved from cookies: ${bastion_credentials}`)
-
     cookies = ['credentials', 'bastion-credentials']
     for (const c of cookies) {
       Cookies.remove(c);
