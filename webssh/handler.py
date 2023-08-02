@@ -476,7 +476,8 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
 
         primary_args, bastion_args = args
 
-        sshlogger.info(f'Connecting to {dst_addr[0][0]} as {dst_addr[0][2]} via {dst_addr[1][0]} as {dst_addr[1][2]}')
+        if sshlogger:
+            sshlogger.info(f'Connecting to {dst_addr[0][0]} as {dst_addr[0][2]} via {dst_addr[1][0]} as {dst_addr[1][2]}')
         # if bastion bits are specified, open a bastion connection first
         bastion_channel = None
         bastion = None
