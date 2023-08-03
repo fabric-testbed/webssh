@@ -1,6 +1,8 @@
 import sys
 import logging
+import logging.handlers
 import os.path as path
+import os
 from webssh._version import __version__, __version_info__
 
 
@@ -11,13 +13,15 @@ if sys.platform == 'win32' and sys.version_info.major == 3 and \
     import asyncio
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+
 sshlogger = None
 if path.exists('log/'):
     # instantiate a logger into a file
     sshlogger = logging.getLogger('ssh_logger')
-    fh = logging.FileHandler('log/webssh.log')
+    fh = logging.handlers.RotatingFileHandler('log/webssh.log', maxBytes=10*1024*1024, backupCount=5)
     fh.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s %(message)s')
     fh.setFormatter(formatter)
     sshlogger.addHandler(fh)
-    sshlogger.info('WebSSH Logging system initialized')
+    sshlogger.info(f'WebSSH Logging system initialized on host {os.environ["HOSTNAME"]}')
+    fh.flush()
