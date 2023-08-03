@@ -496,43 +496,55 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
                                                                  (primary_args[0], primary_args[1]),
                                                                  ('0.0.0.0', 22))
             except socket.error as e:
-                sshlogger.error(log_message + f'ERROR:(Unable to connect to bastion due to: {e})')
+                if sshlogger:
+                    sshlogger.error(log_message + f'ERROR:(Unable to connect to bastion due to: {e})')
                 raise ValueError(f'Unable to connect to bastion due to: {e}')
             except paramiko.BadAuthenticationType:
-                sshlogger.error(log_message + f'ERROR:(Bad bastion authentication type.)')
+                if sshlogger:
+                    sshlogger.error(log_message + f'ERROR:(Bad bastion authentication type.)')
                 raise ValueError('Bad bastion authentication type.')
             except paramiko.AuthenticationException:
-                sshlogger.error(log_message + f'ERROR:(Bastion authentication failed.)')
+                if sshlogger:
+                    sshlogger.error(log_message + f'ERROR:(Bastion authentication failed.)')
                 raise ValueError('Bastion authentication failed.')
             except paramiko.BadHostKeyException:
-                sshlogger.error(log_message + f'ERROR:(Bad bastion host key.)')
+                if sshlogger:
+                    sshlogger.error(log_message + f'ERROR:(Bad bastion host key.)')
                 raise ValueError('Bad bastion host key.')
             except paramiko.ssh_exception.ChannelException as e:
-                sshlogger.error(log_message + f'ERROR:(Unable to connect to bastion due to: {e})')
+                if sshlogger:
+                    sshlogger.error(log_message + f'ERROR:(Unable to connect to bastion due to: {e})')
                 raise ValueError(f'Unable to connect to bastion due to: {e}')
             except Exception as e:
-                sshlogger.error(log_message + f'ERROR: {e}')
+                if sshlogger:
+                    sshlogger.error(log_message + f'ERROR: {e}')
                 raise e
 
         try:
             ssh.connect(*primary_args, timeout=options.timeout, sock=bastion_channel)
         except socket.error as e:
-            sshlogger.error(log_message + f'ERROR:(Unable to connect due to: {e})')
+            if sshlogger:
+                sshlogger.error(log_message + f'ERROR:(Unable to connect due to: {e})')
             raise ValueError(f'Unable to connect due to: {e}')
         except paramiko.BadAuthenticationType:
-            sshlogger.error(log_message + f'ERROR:(Bad authentication type.)')
+            if sshlogger:
+                sshlogger.error(log_message + f'ERROR:(Bad authentication type.)')
             raise ValueError('Bad authentication type.')
         except paramiko.AuthenticationException:
-            sshlogger.error(log_message + f'ERROR:(Authentication failed.)')
+            if sshlogger:
+                sshlogger.error(log_message + f'ERROR:(Authentication failed.)')
             raise ValueError('Authentication failed.')
         except paramiko.BadHostKeyException:
-            sshlogger.error(log_message + f'ERROR:(Bad host key.)')
+            if sshlogger:
+                sshlogger.error(log_message + f'ERROR:(Bad host key.)')
             raise ValueError('Bad host key.')
         except Exception as e:
-            sshlogger.error(log_message + f'ERROR: {e}')
+            if sshlogger:
+                sshlogger.error(log_message + f'ERROR: {e}')
             raise e
 
-        sshlogger.error(log_message + 'OK')
+        if sshlogger:
+            sshlogger.info(log_message + 'OK')
 
         term = self.get_argument('term', u'') or u'xterm'
         chan = ssh.invoke_shell(term=term)
@@ -546,7 +558,8 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
         event_origin = self.get_argument('_origin', u'')
         header_origin = self.request.headers.get('Origin')
         origin = event_origin or header_origin
-
+        if sshlogger:
+            sshlogger.info(f'Origin is {origin} of class {origin.__class__}')
         if origin:
             if not super(IndexHandler, self).check_origin(origin):
                 raise tornado.web.HTTPError(
