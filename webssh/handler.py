@@ -485,8 +485,8 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
         logging.info(f'Connecting to {dst_addr[0][0]} as {dst_addr[0][2]} via {dst_addr[1][0]} as {dst_addr[1][2]}')
 
         primary_args, bastion_args = args
-        if primary_args[4] and len(primary_args[4]) > 0:
-            key_md5 = md5_keysig(primary_args[4])
+        if primary_args[4]:
+            key_md5 = primary_args[4].get_fingerprint()
         else:
             key_md5 = 'MD5:Unknown'
 
@@ -495,8 +495,8 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
         bastion = None
         log_message = f'WebSSH event connect by login:{str(primary_args[2])} using sliver key {key_md5} '
         if bastion_args[0]:
-            if bastion_args[4] and len(bastion_args[4]) > 0:
-                bkey_md5 = md5_keysig(bastion_args[4])
+            if bastion_args[4]:
+                bkey_md5 = bastion_args[4].get_fingerprint()
             else:
                 bkey_md5 = 'MD5:Unknown'
             log_message = (f'WebSSH event connect by login:{str(bastion_args[2])} using sliver key {key_md5} '
