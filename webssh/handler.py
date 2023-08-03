@@ -389,7 +389,7 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
                             hostname, port)
                     )
 
-    def get_args(self):
+    def get_args(self, client_ip=None):
         hostname = self.get_hostname()
         port = self.get_port()
         username = self.get_value('username')
@@ -430,7 +430,7 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
         self.ssh_client.totp = totp
         # split the arguments into primary and bastion
         # note we do not allow passwords for bastions
-        args = ((hostname, port, username, password, pkey), (bhostname, bport, busername, '', bpkey))
+        args = ((hostname, port, username, password, pkey), (bhostname, bport, busername, '', bpkey), client_ip)
         logging.debug(args)
 
         return args
@@ -473,19 +473,20 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
 
     def ssh_connect(self, args):
         ssh = self.ssh_client
-        # args = ((hostname, port, username, password, pkey), (bhostname, bport, busername, '', bpkey))
+        # args = ((hostname, port, username, password, pkey), (bhostname, bport, busername, '', bpkey), client_ip)
         dst_addr = args[:2]
         logging.info(f'Connecting to {dst_addr[0][0]} as {dst_addr[0][2]} via {dst_addr[1][0]} as {dst_addr[1][2]}')
 
-        primary_args, bastion_args = args
+        primary_args, bastion_args, client_ip = args
 
         # if bastion bits are specified, open a bastion connection first
         bastion_channel = None
         bastion = None
-        log_message = f'WebSSH event connect to host:{primary_args[0]} by login:{str(primary_args[2])} '
+        log_message = (f'WebSSH event connect to host:{primary_args[0]} from host:{client_ip} '
+                       f'by login:{str(primary_args[2])}')
         if bastion_args[0]:
-            log_message = (f'WebSSH event connect to host:{primary_args[0]} via host:{bastion_args[0]} '
-                           f'by login:{str(bastion_args[2])} ')
+            log_message = (f'WebSSH event connect to host:{primary_args[0]} from host:{client_ip} '
+                           f'via host:{bastion_args[0]} by login:{str(bastion_args[2])} ')
             try:
                 logging.info(f'Opening connection to bastion host {bastion_args[0]}:{bastion_args[1]}')
                 bastion = paramiko.SSHClient()
@@ -581,8 +582,7 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
             raise ValueError('Uncaught exception')
 
         ip, port = self.get_client_addr()
-        if sshlogger:
-            sshlogger.info(f'Client info is {str(ip)}/{ip.__class__} port {str(port)}/{port.__class__}')
+
         workers = clients.get(ip, {})
         if workers and len(workers) >= options.maxconn:
             raise tornado.web.HTTPError(403, 'Too many live connections.')
@@ -590,7 +590,7 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
         self.check_origin()
 
         try:
-            args = self.get_args()
+            args = self.get_args(ip)
         except InvalidValueError as exc:
             raise tornado.web.HTTPError(400, str(exc))
 
