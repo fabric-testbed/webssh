@@ -7,6 +7,8 @@ import traceback
 import weakref
 import paramiko
 import tornado.web
+import base64
+import hashlib
 
 from concurrent.futures import ThreadPoolExecutor
 from tornado.ioloop import IOLoop
@@ -35,6 +37,13 @@ DEFAULT_PORT = 22
 
 swallow_http_errors = True
 redirecting = None
+
+
+def md5_keysig(key: str) -> str:
+    rawdata = base64.b64decode(key)
+    hexdigest = hashlib.md5(rawdata).hexdigest()
+    keychunks = [hexdigest[i:i + 2] for i in range(0, len(hexdigest), 2)]
+    return 'MD5:' + ":".join(keychunks)
 
 
 class InvalidValueError(Exception):
@@ -471,18 +480,28 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
 
     def ssh_connect(self, args):
         ssh = self.ssh_client
+        # args = ((hostname, port, username, password, pkey), (bhostname, bport, busername, '', bpkey))
         dst_addr = args[:2]
         logging.info(f'Connecting to {dst_addr[0][0]} as {dst_addr[0][2]} via {dst_addr[1][0]} as {dst_addr[1][2]}')
 
         primary_args, bastion_args = args
+        if primary_args[4] and len(primary_args[4]) > 0:
+            key_md5 = md5_keysig(primary_args[4])
+        else:
+            key_md5 = 'MD5:Unknown'
 
-        if sshlogger:
-            sshlogger.info(f'Connecting to {dst_addr[0][0]} as {dst_addr[0][2]} via {dst_addr[1][0]} as {dst_addr[1][2]}')
         # if bastion bits are specified, open a bastion connection first
         bastion_channel = None
         bastion = None
-        try:
-            if bastion_args[0]:
+        log_message = f'WebSSH event connect by login:{str(primary_args[2])} using sliver key {key_md5} '
+        if bastion_args[0]:
+            if bastion_args[4] and len(bastion_args[4]) > 0:
+                bkey_md5 = md5_keysig(bastion_args[4])
+            else:
+                bkey_md5 = 'MD5:Unknown'
+            log_message = (f'WebSSH event connect by login:{str(bastion_args[2])} using sliver key {key_md5} '
+                           f'bastion_key {bkey_md5} ')
+            try:
                 logging.info(f'Opening connection to bastion host {bastion_args[0]}:{bastion_args[1]}')
                 bastion = paramiko.SSHClient()
                 bastion.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -491,27 +510,38 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
                 bastion_channel = bastion_transport.open_channel("direct-tcpip",
                                                                  (primary_args[0], primary_args[1]),
                                                                  ('0.0.0.0', 22))
-        except socket.error as e:
-            raise ValueError(f'Unable to connect to bastion due to: {e}')
-        except paramiko.BadAuthenticationType:
-            raise ValueError('Bad bastion authentication type.')
-        except paramiko.AuthenticationException:
-            raise ValueError('Bastion authentication failed.')
-        except paramiko.BadHostKeyException:
-            raise ValueError('Bad bastion host key.')
-        except paramiko.ssh_exception.ChannelException as e:
-            raise ValueError(f'Unable to connect to bastion due to: {e}')
+            except socket.error as e:
+                sshlogger.error(log_message + f'ERROR:(Unable to connect to bastion due to: {e})')
+                raise ValueError(f'Unable to connect to bastion due to: {e}')
+            except paramiko.BadAuthenticationType:
+                sshlogger.error(log_message + f'ERROR:(Bad bastion authentication type.)')
+                raise ValueError('Bad bastion authentication type.')
+            except paramiko.AuthenticationException:
+                sshlogger.error(log_message + f'ERROR:(Bastion authentication failed.)')
+                raise ValueError('Bastion authentication failed.')
+            except paramiko.BadHostKeyException:
+                sshlogger.error(log_message + f'ERROR:(Bad bastion host key.)')
+                raise ValueError('Bad bastion host key.')
+            except paramiko.ssh_exception.ChannelException as e:
+                sshlogger.error(log_message + f'ERROR:(Unable to connect to bastion due to: {e})')
+                raise ValueError(f'Unable to connect to bastion due to: {e}')
 
         try:
             ssh.connect(*primary_args, timeout=options.timeout, sock=bastion_channel)
         except socket.error as e:
+            sshlogger.error(log_message + f'ERROR:(Unable to connect due to: {e})')
             raise ValueError(f'Unable to connect due to: {e}')
         except paramiko.BadAuthenticationType:
+            sshlogger.error(log_message + f'ERROR:(Bad authentication type.)')
             raise ValueError('Bad authentication type.')
         except paramiko.AuthenticationException:
+            sshlogger.error(log_message + f'ERROR:(Authentication failed.)')
             raise ValueError('Authentication failed.')
         except paramiko.BadHostKeyException:
+            sshlogger.error(log_message + f'ERROR:(Bad host key.)')
             raise ValueError('Bad host key.')
+
+        sshlogger.error(log_message + 'OK')
 
         term = self.get_argument('term', u'') or u'xterm'
         chan = ssh.invoke_shell(term=term)
