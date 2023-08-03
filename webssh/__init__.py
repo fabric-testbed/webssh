@@ -1,5 +1,6 @@
 import sys
 import logging
+import datetime
 import logging.handlers
 import os.path as path
 import os
@@ -14,12 +15,17 @@ if sys.platform == 'win32' and sys.version_info.major == 3 and \
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 
+logfilesize = 15*1024*1024
+backupcount = 5
 sshlogger = None
 if path.exists('log/'):
     # instantiate a logger into a file
     sshlogger = logging.getLogger('ssh_logger')
-    fh = logging.handlers.RotatingFileHandler(f'log/webssh-{os.environ["HOSTNAME"]}.log',
-                                              maxBytes=10*1024*1024, backupCount=5)
+    fh = logging.handlers.RotatingFileHandler(f'log/webssh-'
+                                              f'{datetime.date.today().isoformat()}-'
+                                              f'{os.environ["HOSTNAME"]}.log',
+                                              maxBytes=logfilesize,
+                                              backupCount=backupcount)
     fh.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s %(message)s')
     fh.setFormatter(formatter)
