@@ -39,13 +39,6 @@ swallow_http_errors = True
 redirecting = None
 
 
-def md5_keysig(key: str) -> str:
-    rawdata = base64.b64decode(key)
-    hexdigest = hashlib.md5(rawdata).hexdigest()
-    keychunks = [hexdigest[i:i + 2] for i in range(0, len(hexdigest), 2)]
-    return 'MD5:' + ":".join(keychunks)
-
-
 class InvalidValueError(Exception):
     pass
 
@@ -485,22 +478,14 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
         logging.info(f'Connecting to {dst_addr[0][0]} as {dst_addr[0][2]} via {dst_addr[1][0]} as {dst_addr[1][2]}')
 
         primary_args, bastion_args = args
-        if primary_args[4]:
-            key_md5 = primary_args[4].get_fingerprint()
-        else:
-            key_md5 = 'MD5:Unknown'
 
         # if bastion bits are specified, open a bastion connection first
         bastion_channel = None
         bastion = None
-        log_message = f'WebSSH event connect by login:{str(primary_args[2])} using sliver key {key_md5} '
+        log_message = f'WebSSH event connect to host:{primary_args[0]} by login:{str(primary_args[2])} '
         if bastion_args[0]:
-            if bastion_args[4]:
-                bkey_md5 = bastion_args[4].get_fingerprint()
-            else:
-                bkey_md5 = 'MD5:Unknown'
-            log_message = (f'WebSSH event connect by login:{str(bastion_args[2])} using sliver key {key_md5} '
-                           f'bastion_key {bkey_md5} ')
+            log_message = (f'WebSSH event connect to host:{primary_args[0]} via host:{bastion_args[0]} '
+                           f'by login:{str(bastion_args[2])} ')
             try:
                 logging.info(f'Opening connection to bastion host {bastion_args[0]}:{bastion_args[1]}')
                 bastion = paramiko.SSHClient()
