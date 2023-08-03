@@ -18,7 +18,8 @@ sshlogger = None
 if path.exists('log/'):
     # instantiate a logger into a file
     sshlogger = logging.getLogger('ssh_logger')
-    fh = logging.handlers.RotatingFileHandler('log/webssh.log', maxBytes=10*1024*1024, backupCount=5)
+    fh = logging.handlers.RotatingFileHandler(f'log/webssh-{os.environ["HOSTNAME"]}.log',
+                                              maxBytes=10*1024*1024, backupCount=5)
     fh.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s %(message)s')
     fh.setFormatter(formatter)
