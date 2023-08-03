@@ -558,8 +558,7 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
         event_origin = self.get_argument('_origin', u'')
         header_origin = self.request.headers.get('Origin')
         origin = event_origin or header_origin
-        if sshlogger:
-            sshlogger.info(f'Origin is {origin} of class {origin.__class__}')
+
         if origin:
             if not super(IndexHandler, self).check_origin(origin):
                 raise tornado.web.HTTPError(
@@ -582,6 +581,8 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
             raise ValueError('Uncaught exception')
 
         ip, port = self.get_client_addr()
+        if sshlogger:
+            sshlogger.info(f'Client info is {str(ip)}/{ip.__class__} port {str(port)}/{port.__class__}')
         workers = clients.get(ip, {})
         if workers and len(workers) >= options.maxconn:
             raise tornado.web.HTTPError(403, 'Too many live connections.')
