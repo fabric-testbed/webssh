@@ -510,6 +510,9 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
             except paramiko.ssh_exception.ChannelException as e:
                 sshlogger.error(log_message + f'ERROR:(Unable to connect to bastion due to: {e})')
                 raise ValueError(f'Unable to connect to bastion due to: {e}')
+            except Exception as e:
+                sshlogger.error(log_message + f'ERROR: {e}')
+                raise e
 
         try:
             ssh.connect(*primary_args, timeout=options.timeout, sock=bastion_channel)
@@ -525,6 +528,9 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
         except paramiko.BadHostKeyException:
             sshlogger.error(log_message + f'ERROR:(Bad host key.)')
             raise ValueError('Bad host key.')
+        except Exception as e:
+            sshlogger.error(log_message + f'ERROR: {e}')
+            raise e
 
         sshlogger.error(log_message + 'OK')
 
