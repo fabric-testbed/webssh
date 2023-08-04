@@ -575,7 +575,7 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
             worker = yield future
         except (ValueError, paramiko.SSHException) as exc:
             if sshlogger:
-                sshlogger.error(log_message + f'ERROR:(Unable to connect to bastion due to: {e})')
+                sshlogger.error(log_message + f'ERROR:(Unable to connect to bastion due to: {exc})')
             logging.error(traceback.format_exc())
             self.result.update(status=str(exc))
         else:
