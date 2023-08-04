@@ -482,13 +482,10 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
         # if bastion bits are specified, open a bastion connection first
         bastion_channel = None
         bastion = None
-        log_message = (f'WebSSH event connect to host:{primary_args[0]} from host:{client_ip} '
-                       f'by login:{str(primary_args[2])}')
+
         if bastion_args[0]:
-            log_message = (f'WebSSH event connect to host:{primary_args[0]} from host:{client_ip} '
-                           f'via host:{bastion_args[0]} by login:{str(bastion_args[2])} ')
             try:
-                logging.info(f'Opening connection to bastion host {bastion_args[0]}:{bastion_args[1]}')
+                logging.info(f'Opening connection to bastion host {bastion_args[0]}:{bastion_args[1]} from {client_ip}')
                 bastion = paramiko.SSHClient()
                 bastion.set_missing_host_key_policy(paramiko.AutoAddPolicy())
                 bastion.connect(*bastion_args)
@@ -497,55 +494,27 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
                                                                  (primary_args[0], primary_args[1]),
                                                                  ('0.0.0.0', 22))
             except socket.error as e:
-                if sshlogger:
-                    sshlogger.error(log_message + f'ERROR:(Unable to connect to bastion due to: {e})')
                 raise ValueError(f'Unable to connect to bastion due to: {e}')
             except paramiko.BadAuthenticationType:
-                if sshlogger:
-                    sshlogger.error(log_message + f'ERROR:(Bad bastion authentication type.)')
                 raise ValueError('Bad bastion authentication type.')
             except paramiko.AuthenticationException:
-                if sshlogger:
-                    sshlogger.error(log_message + f'ERROR:(Bastion authentication failed.)')
                 raise ValueError('Bastion authentication failed.')
             except paramiko.BadHostKeyException:
-                if sshlogger:
-                    sshlogger.error(log_message + f'ERROR:(Bad bastion host key.)')
                 raise ValueError('Bad bastion host key.')
             except paramiko.ssh_exception.ChannelException as e:
-                if sshlogger:
-                    sshlogger.error(log_message + f'ERROR:(Unable to connect to bastion due to: {e})')
                 raise ValueError(f'Unable to connect to bastion due to: {e}')
-            except Exception as e:
-                if sshlogger:
-                    sshlogger.error(log_message + f'ERROR: {e}')
-                raise e
 
         try:
+            logging.info(f'Opening connection to host {primary_args[0]}:{primary_args[1]} from {client_ip}')
             ssh.connect(*primary_args, timeout=options.timeout, sock=bastion_channel)
         except socket.error as e:
-            if sshlogger:
-                sshlogger.error(log_message + f'ERROR:(Unable to connect due to: {e})')
             raise ValueError(f'Unable to connect due to: {e}')
         except paramiko.BadAuthenticationType:
-            if sshlogger:
-                sshlogger.error(log_message + f'ERROR:(Bad authentication type.)')
             raise ValueError('Bad authentication type.')
         except paramiko.AuthenticationException:
-            if sshlogger:
-                sshlogger.error(log_message + f'ERROR:(Authentication failed.)')
             raise ValueError('Authentication failed.')
         except paramiko.BadHostKeyException:
-            if sshlogger:
-                sshlogger.error(log_message + f'ERROR:(Bad host key.)')
             raise ValueError('Bad host key.')
-        except Exception as e:
-            if sshlogger:
-                sshlogger.error(log_message + f'ERROR: {e}')
-            raise e
-
-        if sshlogger:
-            sshlogger.info(log_message + 'OK')
 
         term = self.get_argument('term', u'') or u'xterm'
         chan = ssh.invoke_shell(term=term)
@@ -596,12 +565,22 @@ class IndexHandler(MixinHandler, tornado.web.RequestHandler):
 
         future = self.executor.submit(self.ssh_connect, args)
 
+        primary_args, bastion_args, client_ip = args
+        log_message = (f'WebSSH event connect to host:{primary_args[0]} from host:{client_ip} '
+                       f'by login:{str(primary_args[2])} ')
+        if bastion_args[0]:
+            log_message = (f'WebSSH event connect to host:{primary_args[0]} from host:{client_ip} '
+                           f'via host:{bastion_args[0]} by login:{str(bastion_args[2])} ')
         try:
             worker = yield future
         except (ValueError, paramiko.SSHException) as exc:
+            if sshlogger:
+                sshlogger.error(log_message + f'ERROR:(Unable to connect to bastion due to: {e})')
             logging.error(traceback.format_exc())
             self.result.update(status=str(exc))
         else:
+            if sshlogger:
+                sshlogger.info(log_message + 'OK')
             if not workers:
                 clients[ip] = workers
             worker.src_addr = (ip, port)

@@ -5,6 +5,10 @@ services:
     expose:
       - "8888"
     restart: on-failure
+#    volumes:
+#      - type: bind
+#        source: /home/user/log
+#        target: /code/log
 
   nginx:
     image: nginx:latest
