@@ -219,6 +219,14 @@ Nginx configuration automatically redirects from port 80 to port 443 and uses `i
 
 More information on Nginx and docker-compose configuration can be found [here](https://pspdfkit.com/blog/2018/how-to-use-docker-compose-to-run-multiple-instances-of-a-service-in-development/)
 
+### Logging
+ Normal logging goes into container logs. Additionally a `webbsh-<date>-<hostname>.log` (with rotation)
+can be created if `/code/log` directory exists in container (generally bind-mounted from outside). 
+See [docker-compose-nginx.conf](https://github.com/fabric-testbed/webssh/blob/bastion/docker-compose-nginx.yml) 
+ for an example. 
+ 
+If the directory doesn't exist in the container the logger doesn't log.
+
 ### Tips
 
 * For whatever deployment choice you choose, don't forget to enable SSL.
